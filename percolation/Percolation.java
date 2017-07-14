@@ -22,6 +22,9 @@ public class Percolation
 
         virtualTop = 0;
         virtualBottom = n * n;
+
+        for (int col = 1; col <= n; col++)
+            unionFind.union(xyTo1D(1, col), virtualTop);
     }
 
     private int xyTo1D(int x, int y) {
@@ -41,10 +44,19 @@ public class Percolation
         openSites++;
 
         int xy = xyTo1D(row, col);
-        if (row > 1) unionFind.union(xy, xyTo1D(row - 1, col));
-        if (row < n) unionFind.union(xy, xyTo1D(row + 1, col));
-        if (col > 1) unionFind.union(xy, xyTo1D(row, col - 1));
-        if (col < n) unionFind.union(xy, xyTo1D(row, col + 1));
+        boolean connectBottom = false;
+        if (row > 1 && isOpen(row - 1, col))
+            unionFind.union(xy, xyTo1D(row - 1, col));
+        if (row < n && isOpen(row + 1, col)) {
+            if (row == n - 1) connectBottom = true;
+            unionFind.union(xy, xyTo1D(row + 1, col));
+        }
+        if (col > 1 && isOpen(row, col - 1))
+            unionFind.union(xy, xyTo1D(row, col - 1));
+        if (col < n && isOpen(row, col + 1))
+            unionFind.union(xy, xyTo1D(row, col + 1));
+        if (connectBottom && isFull(row, col))
+            unionFind.union(xyTo1D(row + 1, col), virtualBottom);
     }
 
     public boolean isOpen(int row, int col) {
@@ -54,6 +66,7 @@ public class Percolation
 
     public boolean isFull(int row, int col) {
         validate(row, col);
+        if (!isOpen(row, col)) return false;
         return unionFind.connected(virtualTop, xyTo1D(row, col));
     }
 
