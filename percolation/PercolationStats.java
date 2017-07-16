@@ -1,4 +1,3 @@
-import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
@@ -22,7 +21,7 @@ public class PercolationStats {
                 int randomY = StdRandom.uniform(1, n + 1);
                 percolation.open(randomX, randomY);
             }
-            samples[trial] = (double)percolation.numberOfOpenSites() / (n*n);
+            samples[trial] = (double) percolation.numberOfOpenSites() / (n*n);
         }
 
         mean = StdStats.mean(samples);
@@ -54,7 +53,8 @@ public class PercolationStats {
         if (args.length == 2) {
             n = Integer.parseInt(args[0]);
             trials = Integer.parseInt(args[1]);
-        } else System.exit(1);
+        }
+        else return;
 
         PercolationStats ps = new PercolationStats(n, trials);
         StdOut.println("mean                    = " + ps.mean());

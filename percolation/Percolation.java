@@ -40,16 +40,10 @@ public class Percolation {
         openSites++;
 
         int p = xyTo1D(row, col);
-        if (row > 1 && isOpen(row - 1, col)) {
-            // if (row == n && isFull(row - 1, col))
-            //     unionFind.union(p, virtualBottom);
+        if (row > 1 && isOpen(row - 1, col))
             unionFind.union(p, xyTo1D(row - 1, col));
-        }
-        if (row < n && isOpen(row + 1, col)) {
-            // if (row + 1 == n && isFull(row, col))
-            //     unionFind.union(xyTo1D(row + 1, col), virtualBottom);
+        if (row < n && isOpen(row + 1, col))
             unionFind.union(p, xyTo1D(row + 1, col));
-        }
         if (col > 1 && isOpen(row, col - 1))
             unionFind.union(p, xyTo1D(row, col - 1));
         if (col < n && isOpen(row, col + 1))
@@ -72,7 +66,7 @@ public class Percolation {
     }
 
     public boolean percolates() {
-        if (n == 1 && isOpen(1, 1)) return true;
+        if (n == 1) return isOpen(1, 1);
         return unionFind.connected(virtualTop, virtualBottom);
     }
 
