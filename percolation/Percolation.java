@@ -2,6 +2,7 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
     private WeightedQuickUnionUF unionFind;
+    private WeightedQuickUnionUF fullSites;
     private boolean[][] grid;
     private int n;
     private int openSites;
@@ -12,15 +13,11 @@ public class Percolation {
         if (n <= 0) throw new IllegalArgumentException();
 
         unionFind = new WeightedQuickUnionUF(n * n + 2);
+        fullSites = new WeightedQuickUnionUF(n * n + 2);
         grid = new boolean[n][n];
         this.n = n;
         virtualTop = n * n;
         virtualBottom = virtualTop + 1;
-
-        for (int col = 1; col <= n; col++) {
-            unionFind.union(xyTo1D(1, col), virtualTop);
-            unionFind.union(xyTo1D(n, col), virtualBottom);
-        }
     }
 
     private int xyTo1D(int x, int y) {
@@ -32,6 +29,12 @@ public class Percolation {
             throw new IllegalArgumentException("(" + row + ", " + col + ")");
     }
 
+    private void unionSites(int p, int row, int col) {
+        int ij = xyTo1D(row, col);
+        unionFind.union(p, ij);
+        fullSites.union(p, ij);
+    }
+
     public void open(int row, int col) {
         validate(row, col);
         if (isOpen(row, col)) return;
@@ -40,14 +43,16 @@ public class Percolation {
         openSites++;
 
         int p = xyTo1D(row, col);
+        if (row == n) unionFind.union(p, virtualBottom);
+        if (row == 1) unionSites(p, n + 1, 1); // (n+1,1) => virtualTop
         if (row > 1 && isOpen(row - 1, col))
-            unionFind.union(p, xyTo1D(row - 1, col));
+            unionSites(p, row - 1, col);
         if (row < n && isOpen(row + 1, col))
-            unionFind.union(p, xyTo1D(row + 1, col));
+            unionSites(p, row + 1, col);
         if (col > 1 && isOpen(row, col - 1))
-            unionFind.union(p, xyTo1D(row, col - 1));
+            unionSites(p, row, col - 1);
         if (col < n && isOpen(row, col + 1))
-            unionFind.union(p, xyTo1D(row, col + 1));
+            unionSites(p, row, col + 1);
     }
 
     public boolean isOpen(int row, int col) {
@@ -58,7 +63,7 @@ public class Percolation {
     public boolean isFull(int row, int col) {
         validate(row, col);
         if (!isOpen(row, col)) return false;
-        return unionFind.connected(virtualTop, xyTo1D(row, col));
+        return fullSites.connected(virtualTop, xyTo1D(row, col));
     }
 
     public int numberOfOpenSites() {
