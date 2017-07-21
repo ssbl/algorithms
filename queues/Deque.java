@@ -9,9 +9,9 @@ public class Deque<Item> implements Iterable<Item> {
     private Node last;
 
     private class Node {
-        Item item;
-        Node next;
-        Node prev;
+        private Item item;
+        private Node next;
+        private Node prev;
 
         Node(Item item) {
             this.item = item;
@@ -92,7 +92,7 @@ public class Deque<Item> implements Iterable<Item> {
     }
 
     private class DequeIterator implements Iterator<Item> {
-        Node current = first;
+        private Node current = first;
 
         @Override
         public boolean hasNext() {

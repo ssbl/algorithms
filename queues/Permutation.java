@@ -17,7 +17,8 @@ public class Permutation {
                 String s = StdIn.readString();
                 rq.enqueue(s);
             }
-        } catch (NoSuchElementException e) {
+        }
+        catch (NoSuchElementException e) {
             if (rq.isEmpty()) return;
         }
 
