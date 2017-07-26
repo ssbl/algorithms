@@ -10,8 +10,9 @@ public class Permutation {
         if (args.length == 1) k = Integer.parseInt(args[0]);
         else                  return;
 
-        RandomizedQueue<String> rq = new RandomizedQueue<>();
+        if (k == 0) return;
 
+        RandomizedQueue<String> rq = new RandomizedQueue<>();
         try {
             while (true) {
                 String s = StdIn.readString();

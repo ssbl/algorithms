@@ -87,7 +87,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
         @Override
         public Item next() {
-            if (isEmpty()) throw new NoSuchElementException();
+            if (!hasNext()) throw new NoSuchElementException();
             return array[order[current++]];
         }
     }
