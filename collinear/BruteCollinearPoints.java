@@ -5,35 +5,39 @@ public class BruteCollinearPoints {
 
     public BruteCollinearPoints(Point[] points) {
         if (points == null)
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("argument is null");
 
         ArrayList<LineSegment> list = new ArrayList<>();
 
         for (int p = 0; p < points.length; p++) {
+            Point pp = points[p];
             for (int q = p + 1; q < points.length; q++) {
-                if (p.x == q.x && p.y == q.y)
-                    throw new IllegalArgumentException();
+                Point pq = points[q];
+                if (pp.compareTo(pq) == 0)
+                    throw new IllegalArgumentException("duplicate point");
 
-                double pqSlope = p.slopeTo(q);
+                double pqSlope = pp.slopeTo(pq);
                 for (int r = q + 1; r < points.length; r++) {
-                    double qrSlope = q.slopeTo(r);
+                    Point pr = points[r];
+                    double qrSlope = pq.slopeTo(pr);
                     if (pqSlope != qrSlope) continue;
 
                     for (int s = r + 1; r < points.length; s++) {
-                        if (p.x == s.x && p.y == s.y
-                            || q.x == s.x && q.y == s.y
-                            || r.x == s.x && r.y == s.y)
-                            throw new IllegalArgumentException();
+                        Point ps = points[s];
+                        if (pp.compareTo(ps) == 0
+                            || pq.compareTo(ps) == 0
+                            || pr.compareTo(ps) == 0)
+                            throw new IllegalArgumentException("duplicate point");
 
-                        double rsSlope = r.slopeTo(s);
+                        double rsSlope = pr.slopeTo(ps);
                         if (rsSlope == qrSlope)
-                            list.add(new LineSegment(p, s));
+                            list.add(new LineSegment(pp, ps));
                     }
                 }
             }
         }
 
-        segments = list.toArray();
+        segments = list.toArray(new LineSegment[list.size()]);
     }
 
     public int numberOfSegments() {
