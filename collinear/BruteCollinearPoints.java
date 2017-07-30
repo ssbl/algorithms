@@ -13,33 +13,70 @@ public class BruteCollinearPoints {
             throw new IllegalArgumentException("argument is null");
 
         int n = points.length;
-        ArrayList<LineSegment> list = new ArrayList<>();
+        ArrayList<Point> list = new ArrayList<>();
+
+        for (Point point : points) {
+            if (point == null)
+                throw new IllegalArgumentException("point is null");
+        }
 
         for (int p = 0; p < n; p++) {
             Point pp = points[p];
-            for (int q = p + 1; q < n; q++) {
+
+            for (int q = 0; q < n; q++) {
+                if (q == p) continue;
                 Point pq = points[q];
                 if (pp.compareTo(pq) == 0)
                     throw new IllegalArgumentException("duplicate point");
 
                 double pqSlope = pp.slopeTo(pq);
-                for (int r = q + 1; r < n; r++) {
+                for (int r = 0; r < n; r++) {
+                    if (r == q || r == p) continue;
                     Point pr = points[r];
-                    double qrSlope = pq.slopeTo(pr);
-                    if (pqSlope != qrSlope) continue;
+                    double prSlope = pp.slopeTo(pr);
+                    if (Double.compare(pqSlope, prSlope) != 0) continue;
 
-                    for (int s = r + 1; s < n; s++) {
+                    for (int s = 0; s < n; s++) {
+                        if (s == r || s == q || s == p) continue;
                         Point ps = points[s];
 
-                        double diff = pr.slopeTo(ps) - qrSlope;
-                        if (diff >= 0 && diff <= 0.005)
-                            list.add(new LineSegment(pp, ps));
+                        if (Double.compare(pp.slopeTo(ps), prSlope) == 0) {
+                            Point start = pp, end = pp;
+                            if (start.compareTo(pq) > 0) start = pq;
+                            if (start.compareTo(pr) > 0) start = pr;
+                            if (start.compareTo(ps) > 0) start = ps;
+                            if (end.compareTo(pq) < 0)   end = pq;
+                            if (end.compareTo(pr) < 0)   end = pr;
+                            if (end.compareTo(ps) < 0)   end = ps;
+                            list.add(start);
+                            list.add(end);
+                        }
                     }
                 }
             }
         }
 
-        segments = list.toArray(new LineSegment[list.size()]);
+        ArrayList<LineSegment> segList = new ArrayList<>();
+        ArrayList<Point> uniquePts = new ArrayList<>();
+        for (int idx = 0; idx < list.size() - 1; idx += 2) {
+            boolean found = false;
+            Point p = list.get(idx), q = list.get(idx + 1);
+            for (int idx2 = 0; idx2 < uniquePts.size() - 1; idx2 += 2) {
+                if (p.compareTo(uniquePts.get(idx2)) == 0
+                    && q.compareTo(uniquePts.get(idx2 + 1)) == 0) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                uniquePts.add(p);
+                uniquePts.add(q);
+                segList.add(new LineSegment(p, q));
+            }
+        }
+
+        segments = segList.toArray(new LineSegment[segList.size()]);
     }
 
     public int numberOfSegments() {

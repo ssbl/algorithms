@@ -11,8 +11,21 @@ public class FastCollinearPoints {
     public FastCollinearPoints(Point[] points) {
         if (points == null)
             throw new IllegalArgumentException("argument is null");
-        if (points.length <= 2)
-            throw new IllegalArgumentException("need more points");
+
+        for (Point p : points) {
+            if (p == null)
+                throw new IllegalArgumentException("point is null");
+        }
+
+        for (int p = 0; p < points.length; p++)
+            for (int q = 0; q < points.length; q++)
+                if (p != q && points[q].compareTo(points[p]) == 0)
+                    throw new IllegalArgumentException("duplicate point");
+
+        if (points.length < 4) {
+            segments = new LineSegment[0];
+            return;
+        }
 
         ArrayList<Point> segs = new ArrayList<>();
         Point[] others = new Point[points.length - 1];
@@ -20,40 +33,34 @@ public class FastCollinearPoints {
         for (int p = 0; p < points.length; p++) {
             Point pp = points[p];
 
-            if (pp == null)
-                throw new IllegalArgumentException("point is null");
-
-            for (int q = 0, index = 0; q < points.length; q++) {
-                if (q != p) {
-                    if (pp.compareTo(points[q]) == 0)
-                        throw new IllegalArgumentException("duplicate point");
-                    others[index++] = points[q];
-                }
-            }
-
+            for (int q = 0, index = 0; q < points.length; q++)
+                if (q != p) others[index++] = points[q];
             Arrays.sort(others, pp.slopeOrder());
 
             int count = 0;
             Point start = pp, end = pp;
-            double slope = pp.slopeTo(others[0]);
-            for (Point pq : others) {
-                double diff = pp.slopeTo(pq) - slope;
-                if (diff >= 0 && diff <= 0.005) {
+            for (int q = 1; q < others.length; q++) {
+                if (Double.compare(pp.slopeTo(others[q]),
+                                   pp.slopeTo(others[q-1])) == 0) {
                     count++;
-                    if (start.compareTo(pq) > 0) start = pq;
-                    if (end.compareTo(pq) < 0) end = pq;
+                    if (start.compareTo(others[q]) > 0) start = others[q];
+                    if (start.compareTo(others[q-1]) > 0) start = others[q-1];
+                    if (end.compareTo(others[q]) < 0) end = others[q];
+                    if (end.compareTo(others[q-1]) < 0) end = others[q-1];
                 }
                 else {
-                    if (count >= 3) {
+                    if (count >= 2) {
                         segs.add(start);
                         segs.add(end);
                     }
-                    slope = pp.slopeTo(pq);
-                    count = 1;
+                    count = 0;
                     start = end = pp;
-                    if (pp.compareTo(pq) > 0) start = pq;
-                    if (pp.compareTo(pq) < 0) end = pq;
                 }
+            }
+
+            if (count >= 2) {
+                segs.add(start);
+                segs.add(end);
             }
         }
 
@@ -61,17 +68,19 @@ public class FastCollinearPoints {
         ArrayList<Point> uniquePts = new ArrayList<>();
         for (int idx = 0; idx < segs.size() - 1; idx += 2) {
             boolean found = false;
+            Point p = segs.get(idx), q = segs.get(idx + 1);
             for (int idx2 = 0; idx2 < uniquePts.size() - 1; idx2 += 2) {
-                if (segs.get(idx).compareTo(uniquePts.get(idx2)) == 0) {
+                if (p.compareTo(uniquePts.get(idx2)) == 0
+                    && q.compareTo(uniquePts.get(idx2 + 1)) == 0) {
                     found = true;
                     break;
                 }
             }
 
             if (!found) {
-                uniquePts.add(segs.get(idx));
-                uniquePts.add(segs.get(idx + 1));
-                segList.add(new LineSegment(segs.get(idx), segs.get(idx + 1)));
+                uniquePts.add(p);
+                uniquePts.add(q);
+                segList.add(new LineSegment(p, q));
             }
         }
 
