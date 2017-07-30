@@ -45,9 +45,9 @@ public class Point implements Comparable<Point> {
             Point thisPoint = Point.this;
             double diff = thisPoint.slopeTo(p) - thisPoint.slopeTo(q);
 
-            if (diff > 0.05) return 1;
-            if (diff < 0.05) return -1;
-            return 0;
+            if (diff > 0.005) return 1;
+            if (diff >= 0 && diff <= 0.005) return 0;
+            return -1;
         }
     }
 

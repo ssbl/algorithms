@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.In;
@@ -30,8 +31,8 @@ public class BruteCollinearPoints {
                     for (int s = r + 1; s < n; s++) {
                         Point ps = points[s];
 
-                        double rsSlope = pr.slopeTo(ps);
-                        if (rsSlope == qrSlope)
+                        double diff = pr.slopeTo(ps) - qrSlope;
+                        if (diff >= 0 && diff <= 0.005)
                             list.add(new LineSegment(pp, ps));
                     }
                 }
@@ -46,7 +47,7 @@ public class BruteCollinearPoints {
     }
 
     public LineSegment[] segments() {
-        return segments;
+        return Arrays.copyOf(segments, segments.length);
     }
 
     public static void main(String[] args) {
