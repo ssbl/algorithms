@@ -6,7 +6,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 public class FastCollinearPoints {
-    private LineSegment[] segments;
+    private final LineSegment[] segments;
 
     public FastCollinearPoints(Point[] points) {
         if (points == null)

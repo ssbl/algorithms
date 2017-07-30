@@ -50,6 +50,4 @@ public class Point implements Comparable<Point> {
             return -1;
         }
     }
-
-    public static void main(String[] args) { }
 }
