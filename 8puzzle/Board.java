@@ -6,21 +6,40 @@ import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 
 public class Board {
-    private int moves;
-    private String repr;
-
     private final int n;
     private final int nn;
+    private final int hamming;
+    private final int manhattan;
     private final int[][] blocks;
+    private final String repr;
 
     public Board(int[][] blocks) {
-        this.moves = 0;
         this.n = blocks.length;
         this.nn = n*n;
-        this.blocks = new int[n][n];
+        this.blocks = new int[n][];
         for (int row = 0; row < n; row++)
-            for (int col = 0; col < n; col++)
-                this.blocks[row][col] = blocks[row][col];
+            this.blocks[row] = Arrays.copyOf(blocks[row], n);
+
+        int hamming = 0;
+        int manhattan = 0;
+        StringBuilder repr = new StringBuilder();
+
+        repr.append(n + "\n");
+        for (int row = 0; row < n; row++) {
+            for (int col = 0; col < n; col++) {
+                repr.append(String.format("%2d ", blocks[row][col]));
+                if (blocks[row][col] == 0) continue;
+                int item = blocks[row][col] - 1;
+                manhattan += Math.abs(item / n - row);
+                manhattan += Math.abs(item % n - col);
+                hamming++;
+            }
+            repr.append("\n");
+        }
+
+        this.hamming = hamming;
+        this.manhattan = manhattan;
+        this.repr = repr.toString();
     }
 
     public int dimension() {
@@ -28,30 +47,11 @@ public class Board {
     }
 
     public int hamming() {
-        int distance = moves;
-
-        for (int row = 0; row < n; row++)
-            for (int col = 0; col < n; col++)
-                if (blocks[row][col] > 0
-                    && blocks[row][col] != (row*n + col + 1) % nn)
-                    distance++;
-
-        return distance;
+        return hamming;
     }
 
     public int manhattan() {
-        int distance = moves;
-
-        for (int row = 0; row < n; row++) {
-            for (int col = 0; col < n; col++) {
-                if (blocks[row][col] == 0) continue;
-                int item = blocks[row][col] - 1;
-                distance += Math.abs(item / n - row);
-                distance += Math.abs(item % n - col);
-            }
-        }
-
-        return distance;
+        return manhattan;
     }
 
     public boolean isGoal() {
@@ -67,7 +67,10 @@ public class Board {
         int block1 = StdRandom.uniform(nn);
         int block2 = StdRandom.uniform(nn);
 
-        while (block2 == block1)
+        while (blocks[block1 / n][block1 % n] == 0)
+            block1 = StdRandom.uniform(nn);
+
+        while (blocks[block2 / n][block2 % n] == 0 || block2 == block1)
             block2 = StdRandom.uniform(nn);
 
         int i1 = block1 / n;
@@ -84,9 +87,17 @@ public class Board {
 
     @Override
     public boolean equals(Object y) {
-        Board that = (Board) y;
+        if (y == this) return true;
+        if (y == null) return false;
+        if (y.getClass() != this.getClass()) return false;
 
-        return this.toString().equals(that.toString());
+        Board that = (Board) y;
+        if (this.n != that.n) return false;
+        for (int row = 0; row < n; row++)
+            for (int col = 0; col < n; col++)
+                if (this.blocks[row][col] != that.blocks[row][col])
+                    return false;
+        return true;
     }
 
     public Iterable<Board> neighbors() {
@@ -148,7 +159,7 @@ public class Board {
 
         @Override
         public boolean hasNext() {
-            return neighbors.size() != 0;
+            return !neighbors.isEmpty();
         }
 
         @Override
@@ -163,30 +174,7 @@ public class Board {
     }
 
     public String toString() {
-        int max = -1;
-        int spaces = 1;
-        StringBuilder repr = new StringBuilder();
-
-        for (int row = 0; row < n; row++)
-            for (int col = 0; col < n; col++)
-                if (blocks[row][col] > max)
-                    max = blocks[row][col];
-
-        while (max > 0) {
-            spaces++;
-            max /= 10;
-        }
-        String fmt = "%" + spaces + "d ";
-
-        repr.append(n);
-        repr.append("\n");
-        for (int row = 0; row < n; row++) {
-            for (int col = 0; col < n; col++)
-                repr.append(String.format(fmt, blocks[row][col]));
-            repr.append("\n");
-        }
-
-        return repr.toString();
+        return repr;
     }
 
     private int[][] boardCopy() {
