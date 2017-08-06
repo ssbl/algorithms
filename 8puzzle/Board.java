@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
@@ -20,26 +21,26 @@ public class Board {
         for (int row = 0; row < n; row++)
             this.blocks[row] = Arrays.copyOf(blocks[row], n);
 
-        int hamming = 0;
-        int manhattan = 0;
-        StringBuilder repr = new StringBuilder();
+        int hammingDistance = 0;
+        int manhattanDistance = 0;
+        StringBuilder str  = new StringBuilder();
 
-        repr.append(n + "\n");
+        str.append(n + "\n");
         for (int row = 0; row < n; row++) {
             for (int col = 0; col < n; col++) {
-                repr.append(String.format("%2d ", blocks[row][col]));
+                str.append(String.format("%2d ", blocks[row][col]));
                 if (blocks[row][col] == 0) continue;
                 int item = blocks[row][col] - 1;
-                manhattan += Math.abs(item / n - row);
-                manhattan += Math.abs(item % n - col);
-                hamming++;
+                manhattanDistance += Math.abs(item / n - row);
+                manhattanDistance += Math.abs(item % n - col);
+                hammingDistance++;
             }
-            repr.append("\n");
+            str.append("\n");
         }
 
-        this.hamming = hamming;
-        this.manhattan = manhattan;
-        this.repr = repr.toString();
+        this.hamming = hammingDistance;
+        this.manhattan = manhattanDistance;
+        this.repr = str.toString();
     }
 
     public int dimension() {
@@ -77,12 +78,12 @@ public class Board {
         int i2 = block2 / n;
         int j1 = block1 % n;
         int j2 = block2 % n;
-        int[][] blocks = boardCopy();
+        int[][] copy = boardCopy();
 
-        blocks[i1][j1] = this.blocks[i2][j2];
-        blocks[i2][j2] = this.blocks[i1][j1];
+        copy[i1][j1] = blocks[i2][j2];
+        copy[i2][j2] = blocks[i1][j1];
 
-        return new Board(blocks);
+        return new Board(copy);
     }
 
     @Override
@@ -169,6 +170,7 @@ public class Board {
 
         @Override
         public Board next() {
+            if (!hasNext()) throw new NoSuchElementException();
             return neighbors.remove(0);
         }
     }
@@ -187,13 +189,13 @@ public class Board {
     }
 
     public static void main(String[] args) {
-        int blocks[][] = {
+        int[][] blocks = {
             { 8, 1, 3 },
             { 4, 0, 2 },
             { 7, 6, 5 },
         };
 
-        int blocks2[][] = {
+        int[][] blocks2 = {
             { 8, 1, 3 },
             { 4, 0, 2 },
             { 7, 6, 2 },
