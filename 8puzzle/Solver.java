@@ -11,9 +11,9 @@ public class Solver {
     private ArrayList<Board> solution;
 
     private class BoardState {
-        public int moves;
-        public Board prev;
-        public Board board;
+        private int moves;
+        private Board prev;
+        private Board board;
 
         public BoardState(Board board, Board prev, int moves) {
             this.moves = moves;
@@ -27,13 +27,24 @@ public class Solver {
             this.board = board;
         }
 
+        public int moves() {
+            return moves;
+        }
+
+        public Board prev() {
+            return prev;
+        }
+
+        public Board board() {
+            return board;
+        }
     }
 
     private class ManhattanPriority implements Comparator<BoardState> {
         @Override
         public int compare(BoardState a, BoardState b) {
-            int distance1 = a.board.manhattan() + a.moves + 1;
-            int distance2 = b.board.manhattan() + b.moves + 1;
+            int distance1 = a.board().manhattan() + a.moves() + 1;
+            int distance2 = b.board().manhattan() + b.moves() + 1;
 
             return Integer.compare(distance1, distance2);
         }
@@ -47,7 +58,7 @@ public class Solver {
         MinPQ<BoardState> pq;
         BoardState other;
         BoardState current;
-        ArrayList<Board> solution;
+        ArrayList<Board> moveHistory;
         boolean ourTurnNext;
 
         // Game tree, move history for the initial board and its twin.
@@ -60,7 +71,7 @@ public class Solver {
         other = new BoardState(initial.twin());
         current = new BoardState(initial);
         pq = ourPQ;
-        solution = ourMoves;
+        moveHistory = ourMoves;
         ourTurnNext = false;
 
         while (!current.board.isGoal()) {
@@ -70,17 +81,17 @@ public class Solver {
                                              current.board,
                                              current.moves + 1));
 
-            solution.add(current.board);
+            moveHistory.add(current.board);
             current = other;
             other = pq.delMin();
 
             if (ourTurnNext) {
                 pq = ourPQ;
-                solution = ourMoves;
+                moveHistory = ourMoves;
             }
             else {
                 pq = twinPQ;
-                solution = twinMoves;
+                moveHistory = twinMoves;
             }
 
             ourTurnNext = !ourTurnNext;
@@ -90,10 +101,11 @@ public class Solver {
             solvable = false;
             this.solution = null;
             this.moves = -1;
-        } else {
-            solution.add(current.board);
+        }
+        else {
+            moveHistory.add(current.board);
             solvable = true;
-            this.solution = solution;
+            this.solution = moveHistory;
             this.moves = current.moves;
         }
     }
