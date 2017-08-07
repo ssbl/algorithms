@@ -1,50 +1,28 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 
 public class Board {
-    private final int n;
-    private final int nn;
-    private final int hamming;
-    private final int manhattan;
-    private final int[][] blocks;
-    private final String repr;
+    private int n;
+    private int[] blocks;
+    private int hamming;
+    private int manhattan;
+    private String repr;
 
     public Board(int[][] blocks) {
         this.n = blocks.length;
-        this.nn = n*n;
-        this.blocks = new int[n][];
-        for (int row = 0; row < n; row++)
-            this.blocks[row] = Arrays.copyOf(blocks[row], n);
 
-        int hammingDistance = 0;
-        int manhattanDistance = 0;
-        StringBuilder str  = new StringBuilder();
-
-        str.append(n + "\n");
-        for (int row = 0; row < n; row++) {
-            for (int col = 0; col < n; col++) {
-                str.append(String.format("%2d ", blocks[row][col]));
-                if (blocks[row][col] == 0) continue;
-                int item = blocks[row][col] - 1;
-                manhattanDistance += Math.abs(item / n - row);
-                manhattanDistance += Math.abs(item % n - col);
-                hammingDistance++;
-            }
-            str.append("\n");
-        }
-
-        this.hamming = hammingDistance;
-        this.manhattan = manhattanDistance;
-        this.repr = str.toString();
+        int[] copy = new int[n*n];
+        for (int row = 0; row < blocks.length; row++)
+            for (int col = 0; col < blocks.length; col++)
+                copy[row*n + col] = blocks[row][col];
+        init(copy);
     }
 
     public int dimension() {
-        return n;
+        return blocks.length;
     }
 
     public int hamming() {
@@ -56,34 +34,31 @@ public class Board {
     }
 
     public boolean isGoal() {
-        for (int row = 0; row < n; row++)
-            for (int col = 0; col < n; col++)
-                if (blocks[row][col] != (row*n + col + 1) % nn)
-                    return false;
+        int nn = n*n;
+        for (int block = 0; block < nn; block++)
+            if (blocks[block] != (block + 1) % nn)
+                return false;
 
         return true;
     }
 
     public Board twin() {
+        int nn = n*n;
         int block1 = StdRandom.uniform(nn);
         int block2 = StdRandom.uniform(nn);
 
-        while (blocks[block1 / n][block1 % n] == 0)
+        while (blocks[block1] == 0)
             block1 = StdRandom.uniform(nn);
 
-        while (blocks[block2 / n][block2 % n] == 0 || block2 == block1)
+        while (blocks[block2] == 0 || block2 == block1)
             block2 = StdRandom.uniform(nn);
 
-        int i1 = block1 / n;
-        int i2 = block2 / n;
-        int j1 = block1 % n;
-        int j2 = block2 % n;
-        int[][] copy = boardCopy();
+        int[] copy = boardCopy();
 
-        copy[i1][j1] = blocks[i2][j2];
-        copy[i2][j2] = blocks[i1][j1];
+        copy[block1] = blocks[block2];
+        copy[block2] = blocks[block1];
 
-        return new Board(copy);
+        return init(copy);
     }
 
     @Override
@@ -94,98 +69,87 @@ public class Board {
 
         Board that = (Board) y;
         if (this.n != that.n) return false;
-        for (int row = 0; row < n; row++)
-            for (int col = 0; col < n; col++)
-                if (this.blocks[row][col] != that.blocks[row][col])
+        for (int block = 0; block < n*n; block++)
+            if (this.blocks[block] != that.blocks[block])
                     return false;
         return true;
     }
 
     public Iterable<Board> neighbors() {
-        return new Neighbors();
-    }
+        int zeroIdx = 0;
+        ArrayList<Board> neighbors = new ArrayList<>();
 
-    private class Neighbors implements Iterable<Board> {
-        @Override
-        public Iterator<Board> iterator() {
-            return new NeighborIterator();
-        }
-    }
-
-    private class NeighborIterator implements Iterator<Board> {
-        private ArrayList<Board> neighbors;
-
-        public NeighborIterator() {
-            int zi = 0;
-            int zj = 0;
-
-            for (int row = 0; row < n; row++) {
-                boolean found = false;
-                for (int col = 0; col < n; col++) {
-                    if (blocks[row][col] == 0) {
-                        zi = row;
-                        zj = col;
-                        found = true;
-                    }
-                }
-                if (found) break;
-            }
-
-            neighbors = new ArrayList<>();
-            if (zi > 0) {
-                int[][] copy = boardCopy();
-                copy[zi][zj] = blocks[zi - 1][zj];
-                copy[zi - 1][zj] = 0;
-                neighbors.add(new Board(copy));
-            }
-            if (zi < n - 1) {
-                int[][] copy = boardCopy();
-                copy[zi][zj] = blocks[zi + 1][zj];
-                copy[zi + 1][zj] = 0;
-                neighbors.add(new Board(copy));
-            }
-            if (zj > 0) {
-                int[][] copy = boardCopy();
-                copy[zi][zj] = blocks[zi][zj - 1];
-                copy[zi][zj - 1] = 0;
-                neighbors.add(new Board(copy));
-            }
-            if (zj < n - 1) {
-                int[][] copy = boardCopy();
-                copy[zi][zj] = blocks[zi][zj + 1];
-                copy[zi][zj + 1] = 0;
-                neighbors.add(new Board(copy));
+        for (int block = 0; block < n*n; block++) {
+            if (blocks[block] == 0) {
+                zeroIdx = block;
+                break;
             }
         }
 
-        @Override
-        public boolean hasNext() {
-            return !neighbors.isEmpty();
+        if (zeroIdx > n) {
+            int[] copy = boardCopy();
+            copy[zeroIdx] = blocks[zeroIdx - n];
+            copy[zeroIdx - n] = 0;
+            neighbors.add(init(copy));
+        }
+        if (zeroIdx < n*n - n) {
+            int[] copy = boardCopy();
+            copy[zeroIdx] = blocks[zeroIdx + n];
+            copy[zeroIdx + n] = 0;
+            neighbors.add(init(copy));
+        }
+        if (zeroIdx % n != 0) {
+            int[] copy = boardCopy();
+            copy[zeroIdx] = blocks[zeroIdx - 1];
+            copy[zeroIdx - 1] = 0;
+            neighbors.add(init(copy));
+        }
+        if (zeroIdx % n != n - 1) {
+            int[] copy = boardCopy();
+            copy[zeroIdx] = blocks[zeroIdx + 1];
+            copy[zeroIdx + 1] = 0;
+            neighbors.add(init(copy));
         }
 
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Board next() {
-            if (!hasNext()) throw new NoSuchElementException();
-            return neighbors.remove(0);
-        }
+        return neighbors;
     }
 
     public String toString() {
         return repr;
     }
 
-    private int[][] boardCopy() {
-        int[][] copy = new int[n][];
+    private Board init(int[] blocks) {
+        this.n = (int) Math.sqrt(blocks.length);
+        this.blocks = new int[n*n];
+        int hammingDistance = 0;
+        int manhattanDistance = 0;
+        StringBuilder str  = new StringBuilder();
 
-        for (int row = 0; row < n; row++)
-            copy[row] = Arrays.copyOf(blocks[row], n);
+        str.append(n);
+        for (int block = 0; block < n*n; block++) {
+            if (block % n == 0)
+                str.append("\n");
 
-        return copy;
+            this.blocks[block] = blocks[block];
+            str.append(String.format("%2d ", blocks[block]));
+            if (blocks[block] == 0) continue;
+            int item = blocks[block] - 1;
+            manhattanDistance += Math.abs((item - block) / n);
+            manhattanDistance += Math.abs((item - block) % n);
+            if (item != block)
+                hammingDistance++;
+        }
+        str.append("\n");
+
+        this.hamming = hammingDistance;
+        this.manhattan = manhattanDistance;
+        this.repr = str.toString();
+
+        return this;
+    }
+
+    private int[] boardCopy() {
+        return Arrays.copyOf(blocks, n*n);
     }
 
     public static void main(String[] args) {
