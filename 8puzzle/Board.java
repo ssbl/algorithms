@@ -6,23 +6,39 @@ import edu.princeton.cs.algs4.StdRandom;
 
 public class Board {
     private int n;
-    private int[] blocks;
+    private short[] blocks;
     private int hamming;
     private int manhattan;
-    private String repr;
 
     public Board(int[][] blocks) {
-        this.n = blocks.length;
+        init(flattenShort(blocks));
+    }
 
-        int[] copy = new int[n*n];
-        for (int row = 0; row < blocks.length; row++)
-            for (int col = 0; col < blocks.length; col++)
-                copy[row*n + col] = blocks[row][col];
-        init(copy);
+    private Board(short[] blocks) {
+        init(blocks);
+    }
+
+    private void init(short[] blocks) {
+        this.n = (int) Math.sqrt(blocks.length);
+        this.blocks = blocks;
+        int hammingDistance = 0;
+        int manhattanDistance = 0;
+
+        for (int block = 0; block < n*n; block++) {
+            if (blocks[block] == 0) continue;
+            int item = blocks[block] - 1;
+            manhattanDistance += Math.abs((item / n) - (block / n));
+            manhattanDistance += Math.abs((item % n) - (block % n));
+            if (item != block)
+                hammingDistance++;
+        }
+
+        this.hamming = hammingDistance;
+        this.manhattan = manhattanDistance;
     }
 
     public int dimension() {
-        return blocks.length;
+        return n;
     }
 
     public int hamming() {
@@ -53,12 +69,12 @@ public class Board {
         while (blocks[block2] == 0 || block2 == block1)
             block2 = StdRandom.uniform(nn);
 
-        int[] copy = boardCopy();
+        short[] copy = boardCopy();
 
         copy[block1] = blocks[block2];
         copy[block2] = blocks[block1];
 
-        return init(copy);
+        return new Board(copy);
     }
 
     @Override
@@ -76,79 +92,73 @@ public class Board {
     }
 
     public Iterable<Board> neighbors() {
+        int zi = 0;
+        int zj = 0;
         int zeroIdx = 0;
         ArrayList<Board> neighbors = new ArrayList<>();
 
         for (int block = 0; block < n*n; block++) {
             if (blocks[block] == 0) {
+                zi = block / n;
+                zj = block % n;
                 zeroIdx = block;
                 break;
             }
         }
 
-        if (zeroIdx > n) {
-            int[] copy = boardCopy();
+        if (zi > 0) {
+            short[] copy = boardCopy();
             copy[zeroIdx] = blocks[zeroIdx - n];
             copy[zeroIdx - n] = 0;
-            neighbors.add(init(copy));
+            neighbors.add(new Board(copy));
         }
-        if (zeroIdx < n*n - n) {
-            int[] copy = boardCopy();
+        if (zi < n - 1) {
+            short[] copy = boardCopy();
             copy[zeroIdx] = blocks[zeroIdx + n];
             copy[zeroIdx + n] = 0;
-            neighbors.add(init(copy));
+            neighbors.add(new Board(copy));
         }
-        if (zeroIdx % n != 0) {
-            int[] copy = boardCopy();
+        if (zj > 0) {
+            short[] copy = boardCopy();
             copy[zeroIdx] = blocks[zeroIdx - 1];
             copy[zeroIdx - 1] = 0;
-            neighbors.add(init(copy));
+            neighbors.add(new Board(copy));
         }
-        if (zeroIdx % n != n - 1) {
-            int[] copy = boardCopy();
+        if (zj < n - 1) {
+            short[] copy = boardCopy();
             copy[zeroIdx] = blocks[zeroIdx + 1];
             copy[zeroIdx + 1] = 0;
-            neighbors.add(init(copy));
+            neighbors.add(new Board(copy));
         }
 
         return neighbors;
     }
 
     public String toString() {
-        return repr;
-    }
-
-    private Board init(int[] blocks) {
-        this.n = (int) Math.sqrt(blocks.length);
-        this.blocks = new int[n*n];
-        int hammingDistance = 0;
-        int manhattanDistance = 0;
         StringBuilder str  = new StringBuilder();
 
         str.append(n);
         for (int block = 0; block < n*n; block++) {
-            if (block % n == 0)
-                str.append("\n");
-
-            this.blocks[block] = blocks[block];
+            if (block % n == 0) str.append("\n");
             str.append(String.format("%2d ", blocks[block]));
-            if (blocks[block] == 0) continue;
-            int item = blocks[block] - 1;
-            manhattanDistance += Math.abs((item - block) / n);
-            manhattanDistance += Math.abs((item - block) % n);
-            if (item != block)
-                hammingDistance++;
         }
         str.append("\n");
 
-        this.hamming = hammingDistance;
-        this.manhattan = manhattanDistance;
-        this.repr = str.toString();
-
-        return this;
+        return str.toString();
     }
 
-    private int[] boardCopy() {
+    private short[] flattenShort(int[][] matrix) {
+        int len = matrix.length;
+        short[] flat = new short[len*len];
+
+        for (int row = 0; row < len; row++)
+            for (int col = 0; col < len; col++)
+                flat[row*len + col] = (short) matrix[row][col];
+
+        return flat;
+    }
+
+    private short[] boardCopy() {
         return Arrays.copyOf(blocks, n*n);
     }
 

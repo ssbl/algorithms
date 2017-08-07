@@ -14,27 +14,27 @@ public class Solver {
         private int moves;
         private Board board;
         private BoardState prev;
+        private int priority;
 
         public BoardState(Board board, BoardState prev, int moves) {
             this.moves = moves;
             this.board = board;
             this.prev = prev;
+            this.priority = moves + board.manhattan();
         }
 
         public BoardState(Board board) {
             this.moves = 0;
             this.prev = null;
             this.board = board;
+            this.priority = moves + board.manhattan();
         }
     }
 
     private class ManhattanPriority implements Comparator<BoardState> {
         @Override
         public int compare(BoardState a, BoardState b) {
-            int distance1 = a.board.manhattan() + a.moves;
-            int distance2 = b.board.manhattan() + b.moves;
-
-            return Integer.compare(distance1, distance2);
+            return Integer.compare(a.priority, b.priority);
         }
     }
 
