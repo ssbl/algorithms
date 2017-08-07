@@ -12,13 +12,13 @@ public class Solver {
 
     private class BoardState {
         private int moves;
-        private Board prev;
         private Board board;
+        private BoardState prev;
 
-        public BoardState(Board board, Board prev, int moves) {
+        public BoardState(Board board, BoardState prev, int moves) {
             this.moves = moves;
-            this.prev = prev;
             this.board = board;
+            this.prev = prev;
         }
 
         public BoardState(Board board) {
@@ -26,25 +26,13 @@ public class Solver {
             this.prev = null;
             this.board = board;
         }
-
-        public int moves() {
-            return moves;
-        }
-
-        public Board prev() {
-            return prev;
-        }
-
-        public Board board() {
-            return board;
-        }
     }
 
     private class ManhattanPriority implements Comparator<BoardState> {
         @Override
         public int compare(BoardState a, BoardState b) {
-            int distance1 = a.board().manhattan() + a.moves() + 1;
-            int distance2 = b.board().manhattan() + b.moves() + 1;
+            int distance1 = a.board.manhattan() + a.moves;
+            int distance2 = b.board.manhattan() + b.moves;
 
             return Integer.compare(distance1, distance2);
         }
@@ -64,49 +52,44 @@ public class Solver {
         // Game tree, move history for the initial board and its twin.
         MinPQ<BoardState> ourPQ = new MinPQ<>(new ManhattanPriority());
         MinPQ<BoardState> twinPQ = new MinPQ<>(new ManhattanPriority());
-        ArrayList<Board> ourMoves = new ArrayList<>();
-        ArrayList<Board> twinMoves = new ArrayList<>();
 
         // Initial state.
         other = new BoardState(initial.twin());
         current = new BoardState(initial);
         pq = ourPQ;
-        moveHistory = ourMoves;
         ourTurnNext = false;
 
         while (!current.board.isGoal()) {
             for (Board neighbor : current.board.neighbors())
-                if (!neighbor.equals(current.prev))
+                if (current.prev == null
+                    || !neighbor.equals(current.prev.board))
                     pq.insert(new BoardState(neighbor,
-                                             current.board,
+                                             current,
                                              current.moves + 1));
 
-            moveHistory.add(current.board);
             current = other;
             other = pq.delMin();
 
-            if (ourTurnNext) {
-                pq = ourPQ;
-                moveHistory = ourMoves;
-            }
-            else {
-                pq = twinPQ;
-                moveHistory = twinMoves;
-            }
-
+            if (ourTurnNext) pq = ourPQ;
+            else             pq = twinPQ;
             ourTurnNext = !ourTurnNext;
         }
 
         if (ourTurnNext) {
-            solvable = false;
+            this.solvable = false;
             this.solution = null;
             this.moves = -1;
         }
         else {
-            moveHistory.add(current.board);
-            solvable = true;
-            this.solution = moveHistory;
             this.moves = current.moves;
+            moveHistory = new ArrayList<>();
+            while (current.prev != null) {
+                moveHistory.add(0, current.board);
+                current = current.prev;
+            }
+            moveHistory.add(0, initial);
+            this.solution = moveHistory;
+            this.solvable = true;
         }
     }
 
@@ -142,9 +125,13 @@ public class Solver {
         if (!solver.isSolvable())
             StdOut.println("No solution possible");
         else {
-            StdOut.println("Minimum number of moves = " + solver.moves());
-            for (Board board : solver.solution())
+            int length = 0;
+            for (Board board : solver.solution()) {
+                length++;
                 StdOut.println(board);
+            }
+            StdOut.println("Length of solution      = " + length);
+            StdOut.println("Minimum number of moves = " + solver.moves());
         }
     }
 }
