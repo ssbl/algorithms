@@ -57,6 +57,27 @@ public class KdTree {
         draw2D(root, new RectHV(0.0, 0.0, 1.0, 1.0));
     }
 
+    public Iterable<Point2D> range(RectHV rect) {
+        validate(rect);
+        List<Point2D> list = new ArrayList<>();
+        range2D(rect, root, new RectHV(0.0, 0.0, 1.0, 1.0), list);
+        return list;
+    }
+
+    public Point2D nearest(Point2D p) {
+        validate(p);
+        return null;
+    }
+
+    private boolean isHorizontal(TreeNode node) {
+        return node.alignment == HORIZONTAL;
+    }
+
+    private void validate(Object arg) {
+        if (arg == null)
+            throw new IllegalArgumentException("argument is null");
+    }
+
     private void draw2D(TreeNode node, RectHV space) {
         if (node == null) return;
 
@@ -68,7 +89,7 @@ public class KdTree {
         double ymax = space.ymax();
 
         // Draw the line, then draw the point.
-        if (node.alignment == HORIZONTAL) {
+        if (isHorizontal(node)) {
             StdDraw.setPenColor(StdDraw.BLUE);
             StdDraw.line(xmin, y, xmax, y);
             StdDraw.setPenColor();
@@ -90,13 +111,6 @@ public class KdTree {
         }
     }
 
-    public Iterable<Point2D> range(RectHV rect) {
-        validate(rect);
-        List<Point2D> list = new ArrayList<>();
-        range2D(rect, root, new RectHV(0.0, 0.0, 1.0, 1.0), list);
-        return list;
-    }
-
     private void range2D(RectHV rect,
                          TreeNode node,
                          RectHV space,
@@ -110,7 +124,7 @@ public class KdTree {
         double ymin = space.ymin();
         double ymax = space.ymax();
 
-        if (node.alignment == HORIZONTAL) {
+        if (isHorizontal(node)) {
             double y = node.point.y();
             RectHV upSpace = new RectHV(xmin, y, xmax, ymax);
             RectHV downSpace = new RectHV(xmin, ymin, xmax, y);
@@ -130,16 +144,6 @@ public class KdTree {
         }
     }
 
-    public Point2D nearest(Point2D p) {
-        validate(p);
-        return null;
-    }
-
-    private void validate(Object arg) {
-        if (arg == null)
-            throw new IllegalArgumentException("argument is null");
-    }
-
     private void insert2D(TreeNode node, Point2D p) {
         if (node.point.equals(p)) return;
 
@@ -147,7 +151,7 @@ public class KdTree {
         double dimPoint = p.x();
         boolean newAlignment = !node.alignment;
 
-        if (node.alignment == HORIZONTAL) {
+        if (isHorizontal(node)) {
             dimNode = node.point.y();
             dimPoint = p.y();
         }
@@ -175,7 +179,7 @@ public class KdTree {
         double dimPoint = p.x();
         int cmp = Double.compare(node.point.y(), p.y());
 
-        if (node.alignment == HORIZONTAL) {
+        if (isHorizontal(node)) {
             cmp = Double.compare(dimNode, dimPoint);
             dimNode = node.point.y();
             dimPoint = p.y();
