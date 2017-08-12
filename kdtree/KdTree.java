@@ -3,6 +3,8 @@ import java.util.List;
 
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
 
 public class KdTree {
     private static final boolean HORIZONTAL = true;
@@ -36,8 +38,7 @@ public class KdTree {
     }
 
     public void insert(Point2D p) {
-        if (p == null)
-            throw new IllegalArgumentException("argument is null");
+        validate(p);
         if (root == null) {
             root = new TreeNode(p, VERTICAL);
             return;
@@ -47,27 +48,50 @@ public class KdTree {
     }
 
     public boolean contains(Point2D p) {
-        if (p == null)
-            throw new IllegalArgumentException("argument is null");
+        validate(p);
         if (root == null) return false;
         return contains2D(root, p);
     }
 
     public void draw() {
-        draw2D(root);
+        draw2D(root, new RectHV(0.0, 0.0, 1.0, 1.0));
     }
 
-    private void draw2D(TreeNode node) {
+    private void draw2D(TreeNode node, RectHV space) {
         if (node == null) return;
-        node.point.draw();
-        draw2D(node.left);
-        draw2D(node.right);
+
+        double x = node.point.x();
+        double y = node.point.y();
+        double xmin = space.xmin();
+        double ymin = space.ymin();
+        double xmax = space.xmax();
+        double ymax = space.ymax();
+
+        // Draw the line, then draw the point.
+        if (node.alignment == HORIZONTAL) {
+            StdDraw.setPenColor(StdDraw.BLUE);
+            StdDraw.line(xmin, y, xmax, y);
+            StdDraw.setPenColor();
+            StdDraw.setPenRadius(0.02);
+            node.point.draw();
+            StdDraw.setPenRadius();
+            draw2D(node.left, new RectHV(xmin, ymin, xmax, y));
+            draw2D(node.right, new RectHV(xmin, y, xmax, ymax));
+        }
+        else {
+            StdDraw.setPenColor(StdDraw.RED);
+            StdDraw.line(x, ymin, x, ymax);
+            StdDraw.setPenColor();
+            StdDraw.setPenRadius(0.02);
+            node.point.draw();
+            StdDraw.setPenRadius();
+            draw2D(node.left, new RectHV(xmin, ymin, x, ymax));
+            draw2D(node.right, new RectHV(x, ymin, xmax, ymax));
+        }
     }
 
     public Iterable<Point2D> range(RectHV rect) {
-        if (rect == null)
-            throw new IllegalArgumentException("argument is null");
-
+        validate(rect);
         List<Point2D> list = new ArrayList<>();
         range2D(rect, root, new RectHV(0.0, 0.0, 1.0, 1.0), list);
         return list;
@@ -79,6 +103,7 @@ public class KdTree {
                          List<Point2D> list) {
         if (node == null) return;
         if (rect.contains(node.point)) list.add(node.point);
+        if (node.left == null && node.right == null) return;
 
         double xmin = space.xmin();
         double xmax = space.xmax();
@@ -87,66 +112,37 @@ public class KdTree {
 
         if (node.alignment == HORIZONTAL) {
             double y = node.point.y();
-            if (rect.intersects(new RectHV(xmin, y, xmax, y))) {
-                range2D(rect,
-                        node.left,
-                        new RectHV(xmin, ymin, xmax, y),
-                        list);
-                range2D(rect,
-                        node.right,
-                        new RectHV(xmin, y, xmax, ymax),
-                        list);
-            }
-            else {
-                double up = Double.POSITIVE_INFINITY;
-                double down = Double.POSITIVE_INFINITY;
-                if (node.left != null) down = rect.distanceTo(node.left.point);
-                if (node.right != null) up = rect.distanceTo(node.right.point);
-
-                if (up < down)
-                    range2D(rect, node.right,
-                            new RectHV(xmin, y, xmax, ymax), list);
-                else
-                    range2D(rect, node.left,
-                            new RectHV(xmin, ymin, xmax, y), list);
-            }
+            RectHV upSpace = new RectHV(xmin, y, xmax, ymax);
+            RectHV downSpace = new RectHV(xmin, ymin, xmax, y);
+            if (rect.intersects(upSpace))
+                range2D(rect, node.right, upSpace, list);
+            if (rect.intersects(downSpace))
+                range2D(rect, node.left, downSpace, list);
         }
         else {
             double x = node.point.x();
-            if (rect.intersects(new RectHV(x, ymin, x, ymax))) {
-                range2D(rect,
-                        node.left,
-                        new RectHV(xmin, ymin, x, ymax),
-                        list);
-                range2D(rect,
-                        node.right,
-                        new RectHV(x, ymin, xmax, ymax),
-                        list);
-            }
-            else {
-                double left = Double.POSITIVE_INFINITY;
-                double right = Double.POSITIVE_INFINITY;
-                if (node.left != null) left = rect.distanceTo(node.left.point);
-                if (node.right != null) right = rect.distanceTo(node.right.point);
-
-                if (right < left)
-                    range2D(rect, node.right,
-                            new RectHV(x, ymin, xmax, ymax), list);
-                else
-                    range2D(rect, node.left,
-                            new RectHV(xmin, ymin, x, ymax), list);
-            }
+            RectHV leftSpace = new RectHV(xmin, ymin, x, ymax);
+            RectHV rightSpace = new RectHV(x, ymin, xmax, ymax);
+            if (rect.intersects(leftSpace))
+                range2D(rect, node.left, leftSpace, list);
+            if (rect.intersects(rightSpace))
+                range2D(rect, node.right, rightSpace, list);
         }
     }
 
     public Point2D nearest(Point2D p) {
-        if (p == null)
-            throw new IllegalArgumentException("argument is null");
-
+        validate(p);
         return null;
     }
 
+    private void validate(Object arg) {
+        if (arg == null)
+            throw new IllegalArgumentException("argument is null");
+    }
+
     private void insert2D(TreeNode node, Point2D p) {
+        if (node.point.equals(p)) return;
+
         double dimNode = node.point.x();
         double dimPoint = p.x();
         boolean newAlignment = !node.alignment;
@@ -158,11 +154,17 @@ public class KdTree {
 
         if (dimPoint < dimNode) {
             if (node.left != null) insert2D(node.left, p);
-            else                   node.left = new TreeNode(p, newAlignment);
+            else {
+                node.left = new TreeNode(p, newAlignment);
+                size++;
+            }
         }
         else {
             if (node.right != null) insert2D(node.right, p);
-            else                    node.right = new TreeNode(p, newAlignment);
+            else {
+                node.right = new TreeNode(p, newAlignment);
+                size++;
+            }
         }
     }
 
@@ -185,6 +187,16 @@ public class KdTree {
     }
 
     public static void main(String[] args) {
-
+        KdTree kdtree = new KdTree();
+        kdtree.insert(new Point2D(0.7, 0.2));
+        kdtree.insert(new Point2D(0.5, 0.4));
+        kdtree.insert(new Point2D(0.2, 0.3));
+        kdtree.insert(new Point2D(0.4, 0.7));
+        kdtree.insert(new Point2D(0.9, 0.6));
+        kdtree.draw();
+        StdOut.println(kdtree.contains(new Point2D(0.2, 0.3)));
+        StdOut.println(kdtree.contains(new Point2D(0.1, 0.2)));
+        for (Point2D p : kdtree.range(new RectHV(0.3, 0.6, 0.6, 0.9)))
+            StdOut.println(p);
     }
 }
