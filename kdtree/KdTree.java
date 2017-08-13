@@ -14,9 +14,9 @@ public class KdTree {
     private int size;
 
     private class TreeNode {
-        Point2D point;
-        TreeNode left, right;
-        boolean alignment;
+        private Point2D point;
+        private TreeNode left, right;
+        private boolean alignment;
 
         public TreeNode(Point2D p, boolean alignment) {
             this.point = p;
