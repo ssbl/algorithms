@@ -14,9 +14,9 @@ public class KdTree {
     private int size;
 
     private class TreeNode {
-        private Point2D point;
+        private final Point2D point;
+        private final boolean alignment;
         private TreeNode left, right;
-        private boolean alignment;
 
         public TreeNode(Point2D p, boolean alignment) {
             this.point = p;
@@ -41,6 +41,7 @@ public class KdTree {
         validate(p);
         if (root == null) {
             root = new TreeNode(p, VERTICAL);
+            size = 1;
             return;
         }
 
@@ -124,13 +125,14 @@ public class KdTree {
         double ymin = space.ymin();
         double xmax = space.xmax();
         double ymax = space.ymax();
+        double pointPenRadius = 0.02;
 
         // Draw the line, then draw the point.
         if (isHorizontal(node)) {
             StdDraw.setPenColor(StdDraw.BLUE);
             StdDraw.line(xmin, y, xmax, y);
             StdDraw.setPenColor();
-            StdDraw.setPenRadius(0.02);
+            StdDraw.setPenRadius(pointPenRadius);
             node.point.draw();
             StdDraw.setPenRadius();
             draw2D(node.left, new RectHV(xmin, ymin, xmax, y));
@@ -140,7 +142,7 @@ public class KdTree {
             StdDraw.setPenColor(StdDraw.RED);
             StdDraw.line(x, ymin, x, ymax);
             StdDraw.setPenColor();
-            StdDraw.setPenRadius(0.02);
+            StdDraw.setPenRadius(pointPenRadius);
             node.point.draw();
             StdDraw.setPenRadius();
             draw2D(node.left, new RectHV(xmin, ymin, x, ymax));
@@ -212,19 +214,21 @@ public class KdTree {
     private boolean contains2D(TreeNode node, Point2D p) {
         if (node == null) return false;
 
-        double dimNode = node.point.x();
-        double dimPoint = p.x();
-        int cmp = Double.compare(node.point.y(), p.y());
+        double px = p.x();
+        double py = p.y();
+        double x = node.point.x();
+        double y = node.point.y();
+
+        if (px == x && py == y) return true;
 
         if (isHorizontal(node)) {
-            cmp = Double.compare(dimNode, dimPoint);
-            dimNode = node.point.y();
-            dimPoint = p.y();
+            if (py < y) return contains2D(node.left, p);
+            return contains2D(node.right, p);
         }
-
-        if (dimPoint < dimNode) return contains2D(node.left, p);
-        if (dimPoint > dimNode) return contains2D(node.right, p);
-        return cmp == 0;
+        else {
+            if (px < x) return contains2D(node.left, p);
+            return contains2D(node.right, p);
+        }
     }
 
     public static void main(String[] args) {
