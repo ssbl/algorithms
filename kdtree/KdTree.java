@@ -66,7 +66,44 @@ public class KdTree {
 
     public Point2D nearest(Point2D p) {
         validate(p);
-        return null;
+        if (root == null) return null;
+
+        return nearest2D(root, root.point, p);
+    }
+
+    private Point2D nearest2D(TreeNode node, Point2D min, Point2D p) {
+        if (node == null) return min;
+        if (node.point.distanceSquaredTo(p) < min.distanceSquaredTo(p))
+            min = node.point;
+        if (node.left == null && node.right == null) return min;
+        
+        if (isHorizontal(node)) {
+            Point2D closest = new Point2D(p.x(), node.point.y());
+            if (p.y() < node.point.y()) {
+                min = nearest2D(node.left, min, p);
+                if (min.distanceSquaredTo(p) > closest.distanceSquaredTo(p))
+                    return nearest2D(node.right, min, p);
+            }
+            else {
+                min = nearest2D(node.right, min, p);
+                if (min.distanceSquaredTo(p) > closest.distanceSquaredTo(p))
+                    return nearest2D(node.left, min, p);
+            }
+        }
+        else {
+            Point2D closest = new Point2D(node.point.x(), p.y());
+            if (p.x() < node.point.x()) {
+                min = nearest2D(node.left, min, p);
+                if (min.distanceSquaredTo(p) > closest.distanceSquaredTo(p))
+                    return nearest2D(node.right, min, p);
+            }
+            else {
+                min = nearest2D(node.right, min, p);
+                if (min.distanceSquaredTo(p) > closest.distanceSquaredTo(p))
+                    return nearest2D(node.left, min, p);
+            }
+        }
+        return min;
     }
 
     private boolean isHorizontal(TreeNode node) {
@@ -200,6 +237,7 @@ public class KdTree {
         kdtree.draw();
         StdOut.println(kdtree.contains(new Point2D(0.2, 0.3)));
         StdOut.println(kdtree.contains(new Point2D(0.1, 0.2)));
+        StdOut.println("nearest = " + kdtree.nearest(new Point2D(0.9, 0.6)));
         for (Point2D p : kdtree.range(new RectHV(0.3, 0.6, 0.6, 0.9)))
             StdOut.println(p);
     }
