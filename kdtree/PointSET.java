@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 
 public class PointSET {
-    private TreeSet<Point2D> points;
+    private final TreeSet<Point2D> points;
 
     public PointSET() {
         this.points = new TreeSet<>();
@@ -70,9 +70,5 @@ public class PointSET {
         }
 
         return min;
-    }
-
-    public static void main(String[] args) {
-
     }
 }
