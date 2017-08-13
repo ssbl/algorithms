@@ -59,10 +59,10 @@ public class PointSET {
             return null;
 
         Point2D min = points.first();
-        double minDistance = p.distanceTo(min);
+        double minDistance = p.distanceSquaredTo(min);
 
         for (Point2D point : points) {
-            double distance = p.distanceTo(point);
+            double distance = p.distanceSquaredTo(point);
             if (distance < minDistance) {
                 min = point;
                 minDistance = distance;
